@@ -10,13 +10,13 @@ The demo is delivered in **Linux Shell** scripts. You can start a **Cloud Shell*
 ## Environment variables
 
 ```bash
-export CLUSTER_NAME=tpc-ds-cluster
-export PROJECT=forrest-test-project-333203
+export CLUSTER_NAME=cluster-tpcds
+export PROJECT=agolis-allen-first
 export REGION=us-central1
-export NETWORK=bigdata-network
-export SUBNET=dataflow-network
-export DATAPROC_BUCKET=forrest-dataproc-bucket
-export ROOT_DIR=gs://forrest-tpcds/tpcds1000
+export NETWORK=first-vpc
+export SUBNET=first-vpc
+export DATAPROC_BUCKET=agolis-allen-first-dataproc-bucket
+export ROOT_DIR=gs://agolis-allen-first-tpcds/tpcds3000_zstd
 export DPMS_NAME=hms
 gcloud config set project ${PROJECT}
 ```
