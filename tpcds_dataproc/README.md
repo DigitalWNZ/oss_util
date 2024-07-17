@@ -35,8 +35,8 @@ gcloud metastore services create ${DPMS_NAME} \
 
 ## Create dataproc cluster
 ```bash
-git clone https://github.com/gddezero/gcp-samples.git
-gsutil cp gcp-samples/tpcds_dataproc/tpcds_bootstrap.sh gs://${DATAPROC_BUCKET}/bootstrap/
+git clone https://github.com/DigitalWNZ/oss_util.git
+gsutil cp oss_util/tpcds_dataproc/tpcds_bootstrap.sh gs://${DATAPROC_BUCKET}/bootstrap/
 
 gcloud dataproc clusters create ${CLUSTER_NAME} \
   --project ${PROJECT} \
@@ -78,7 +78,7 @@ gcloud dataproc clusters create ${CLUSTER_NAME} \
 After dataproc cluster is deployed, login with SSH to the master node of the Dataproc cluster. Suggest to run the command in tmux or screen session because it takes several minitues to hours to generate TPC-DS 1000GB data
 
 ```bash
-cd /opt/gcp-samples/tpcds_dataproc
+cd /opt/oss_util/tpcds_dataproc
 spark-shell --jars spark-sql-perf_2.12-0.5.1-SNAPSHOT.jar -I datagen.scala
 ```
 
@@ -94,7 +94,7 @@ Also change the the value of variable `databaseName` in tpcds.scala
 After TPC-DS data is generated, run the following command to run tests. Suggest to run in tmux or screen session because it takes several minitues to hours to run TPC-DS tests depending on number of executors. Please change `num-executors` according to your worker vcores.
 
 ```bash
-cd /opt/gcp-samples/tpcds_dataproc
+cd /opt/oss_util/tpcds_dataproc
 spark-shell \
   --jars spark-sql-perf_2.12-0.5.1-SNAPSHOT.jar \
   --executor-memory 18971M \
@@ -112,7 +112,7 @@ spark-shell \
 When you terminated the Dataproc cluster and Hive metastore, the data files still remains on Storage. You can deploy a new cluster to run the TPC-DS benchmark. Run the following script to create tables before starting the TPC-DS benchmark. Make sure to change the variables in `create_table.scala` including: rootDir, dsdgenDir, scaleFactor, format, databaseName
 
 ```bash
-cd /opt/gcp-samples/tpcds_dataproc
+cd /opt/oss_util/tpcds_dataproc
 spark-shell \
   --jars spark-sql-perf_2.12-0.5.1-SNAPSHOT.jar \
   --driver-memory 8192M \

@@ -2,9 +2,9 @@ import com.databricks.spark.sql.perf.tpcds.TPCDSTables
 
 val rootDir = "<ROOT_DIR>"
 val dsdgenDir = "/opt/gcp-samples/tpcds_dataproc/tpcds-kit/tools"
-val scaleFactor = "1000"
+val scaleFactor = "3000"
 val format = "parquet"
-val databaseName = "tpcds1000"
+val databaseName = "tpcds3000"
 val sqlContext = spark.sqlContext
 
 val tables = new TPCDSTables(sqlContext,
