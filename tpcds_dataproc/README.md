@@ -38,6 +38,46 @@ gcloud metastore services create ${DPMS_NAME} \
 git clone https://github.com/DigitalWNZ/oss_util.git
 gsutil cp oss_util/tpcds_dataproc/tpcds_bootstrap.sh gs://${DATAPROC_BUCKET}/bootstrap/
 
+--My version
+gcloud dataproc clusters create ${CLUSTER_NAME} \
+  --project ${PROJECT} \
+  --bucket ${DATAPROC_BUCKET} \
+  --region ${REGION} \
+  --subnet ${SUBNET} \
+  --dataproc-metastore=projects/${PROJECT}/locations/${REGION}/services/${DPMS_NAME} \
+  --scopes cloud-platform \
+  --enable-component-gateway \
+  --image-version 2.2-debian12 \
+  --num-masters 1 \
+  --num-workers 6 \
+  --num-secondary-workers 0 \
+  --master-machine-type n2d-standard-8 \
+  --master-min-cpu-platform "AMD Milan" \
+  --master-boot-disk-type pd-balanced \
+  --master-boot-disk-size 500GB \
+  --num-master-local-ssds 1 \
+  --master-local-ssd-interface NVME \
+  --worker-machine-type n2d-highmem-8 \
+  --worker-min-cpu-platform "AMD Milan" \
+  --worker-boot-disk-type pd-balanced \
+  --worker-boot-disk-size 500GB \
+  --num-worker-local-ssds 2 \
+  --worker-local-ssd-interface NVME \
+  --initialization-actions gs://${DATAPROC_BUCKET}/bootstrap/tpcds_bootstrap.sh \
+  --metadata ROOT_DIR=${ROOT_DIR} \
+  --properties "hive:yarn.log-aggregation-enable=true" \
+  --properties "spark:spark.checkpoint.compress=true" \
+  --properties "spark:spark.eventLog.compress=true" \
+  --properties "spark:spark.eventLog.compression.codec=zstd" \
+  --properties "spark:spark.eventLog.rolling.enabled=true" \
+  --properties "spark:spark.io.compression.codec=zstd" \
+  --properties "spark:spark.sql.parquet.compression.codec=zstd" \
+  --properties "spark:spark.dataproc.enhanced.optimizer.enabled=true" \
+  --properties "spark:spark.dataproc.enhanced.execution.enabled=true" \
+  --properties "spark:spark.history.fs.logDirectory=gs://${DATAPROC_BUCKET}/phs/spark-job-history" \
+  --properties "dataproc:dataproc.cluster.caching.enabled=true" 
+
+--Original version from Forrest
 gcloud dataproc clusters create ${CLUSTER_NAME} \
   --project ${PROJECT} \
   --bucket ${DATAPROC_BUCKET} \
@@ -95,6 +135,29 @@ After TPC-DS data is generated, run the following command to run tests. Suggest 
 
 ```bash
 cd /opt/oss_util/tpcds_dataproc
+--My version
+spark-shell \
+  --jars spark-sql-perf_2.12-0.5.1-SNAPSHOT.jar \
+  --deploy-mode client \
+  --master yarn \
+  --conf spark.sql.files.maxPartitionBytes=1073741824 \
+  --conf fs.gs.block.size=1073741824 \
+  --conf spark.hadoop.fs.gs.block.size=1073741824 \
+  --conf spark.hadoop.mapreduce.outputcommitter.factory.class=org.apache.hadoop.mapreduce.lib.output.DataprocFileOutputCommitterFactory \
+  --conf spark.hadoop.mapreduce.fileoutputcommitter.marksuccessfuljobs=false \
+  --conf spark.dataproc.enhanced.optimizer.enabled=true \
+  --conf spark.dataproc.enhanced.execution.enabled=true \
+  --conf spark.driver.cores=8 \
+  --conf spark.driver.memory=32g \
+  --conf spark.executor.cores=2 \
+  --conf spark.executor.memory=6g \
+  --conf spark.network.timeout=2000 \
+  --conf spark.executor.heartbeatInterval=300s \
+  --conf spark.dynamicAllocation.enabled=true \
+  --conf spark.default.parallelism=144 \
+  -I tpcds.scala
+
+--Origianl version from Forrest
 spark-shell \
   --jars spark-sql-perf_2.12-0.5.1-SNAPSHOT.jar \
   --executor-memory 18971M \
