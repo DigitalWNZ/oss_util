@@ -196,10 +196,17 @@ gsutil cp part-00000-303f2546-5580-42f2-947d-eb0dca8f312e-c000.json gs://agolis-
 Once you got access to the file, run this [python program](https://github.com/DigitalWNZ/gcp_python_code/blob/main/parse_tpcds_result.py) to parse the json data and ingested into Bigquery. \
 Sample Query to view total execution time of each iteration:
 ```
-SELECT 
-  iteration,
-  sum(executionTime)/60000 as totalExecutionTime,
-  sum(parsingTime + analysisTime + optimizationTime + planningTime + executionTime)/60000 as totalTime
-FROM `agolis-allen-first.IGG.dp_tpcds_v1` 
-group by 1
+with base as (
+  SELECT 
+    iteration,
+    sum(executionTime)/60000 as totalExecutionTime,
+    sum(parsingTime + analysisTime + optimizationTime + planningTime + executionTime)/60000 as totalTime
+  FROM `agolis-allen-first.IGG.dp_tpcds_v1` 
+  where name <> 'ss_max-v2.4'
+  group by 1
+)
+select 
+  exp(sum(log(totalExecutionTime)) / count(*)) as geomean_executionTime,
+  exp(sum(log(totalTime)) / count(*)) as geomean_totalTime
+from base
 ```
