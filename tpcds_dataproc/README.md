@@ -129,6 +129,20 @@ If you want to generate a different data size, change the following variables in
 
 Also change the the value of variable `databaseName` in tpcds.scala
 
+Please bear in mind the table will be created in the datagen process.
+
+## Reuse existing data 
+If you only have data without corresponding metastore, You need to run the following script to create tables before starting the TPC-DS benchmark. Make sure to change the variables in `create_table.scala` including: rootDir, dsdgenDir, scaleFactor, format, databaseName
+```bash
+cd /opt/oss_util/tpcds_dataproc
+spark-shell \
+  --jars spark-sql-perf_2.12-0.5.1-SNAPSHOT.jar \
+  --driver-memory 8192M \
+  --deploy-mode client \
+  --master yarn \
+  -I create_table.scala
+```
+
 ## Run TPC-DS 1000 tests
 
 After TPC-DS data is generated, run the following command to run tests. Suggest to run in tmux or screen session because it takes several minitues to hours to run TPC-DS tests depending on number of executors. Please change `num-executors` according to your worker vcores.
@@ -170,16 +184,22 @@ spark-shell \
   -I tpcds.scala
 ```
 
-## Create table for new dataproc cluster
+## Parse benchmark result
+By default, the benchmark result will be stored in ```/results/timestamp=1721266172526``` on hdfs system. The file name like part-00000-303f2546-5580-42f2-947d-eb0dca8f312e-c000.json\
+Run the following 2 commands to copy the file to localDisk or GCS.
+```
+hdfs dfs -ls /results/timestamp=1721266172526
+sudo hdfs dfs -copyToLocal /results/timestamp=1721266172526/* .
+gsutil cp part-00000-303f2546-5580-42f2-947d-eb0dca8f312e-c000.json gs://agolis-allen-first-tpcds
+```
 
-When you terminated the Dataproc cluster and Hive metastore, the data files still remains on Storage. You can deploy a new cluster to run the TPC-DS benchmark. Run the following script to create tables before starting the TPC-DS benchmark. Make sure to change the variables in `create_table.scala` including: rootDir, dsdgenDir, scaleFactor, format, databaseName
-
-```bash
-cd /opt/oss_util/tpcds_dataproc
-spark-shell \
-  --jars spark-sql-perf_2.12-0.5.1-SNAPSHOT.jar \
-  --driver-memory 8192M \
-  --deploy-mode client \
-  --master yarn \
-  -I create_table.scala
+Once you got access to the file, run this [python program](https://github.com/DigitalWNZ/gcp_python_code/blob/main/parse_tpcds_result.py) to parse the json data and ingested into Bigquery. \
+Sample Query to view total execution time of each iteration:
+```
+SELECT 
+  iteration,
+  sum(executionTime)/60000 as totalExecutionTime,
+  sum(parsingTime + analysisTime + optimizationTime + planningTime + executionTime)/60000 as totalTime
+FROM `agolis-allen-first.IGG.dp_tpcds_v1` 
+group by 1
 ```
